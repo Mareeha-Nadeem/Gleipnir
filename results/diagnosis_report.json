@@ -1,5 +1,61 @@
 [
   {
+    "test_name": "tests/sample_project/test_extended.py::test_broken_assertion_false",
+    "root_cause_category": "shared_state",
+    "confidence": 0.97,
+    "explanation": "`test_broken_assertion_false` relies on mutable state that is not reset between test runs. Evidence: module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]'; module-level mutable: config = \"{'host': 'localhost', 'port': 8080}\". Because the state persists across tests (or across re-runs of the same test), outcomes vary with execution order or prior PRNG state.",
+    "reasoning_trace": "Categories considered:\n  timing               score=0.00 [no signals found]\n  shared_state         score=3.60 [module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]']\n  race_condition       score=0.00 [no signals found]\n  external_call        score=0.00 [no signals found]\nWinner: 'shared_state' selected (highest raw score)."
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_broken_attribute_error",
+    "root_cause_category": "shared_state",
+    "confidence": 0.97,
+    "explanation": "`test_broken_attribute_error` relies on mutable state that is not reset between test runs. Evidence: module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]'; module-level mutable: config = \"{'host': 'localhost', 'port': 8080}\". Because the state persists across tests (or across re-runs of the same test), outcomes vary with execution order or prior PRNG state.",
+    "reasoning_trace": "Categories considered:\n  timing               score=0.00 [no signals found]\n  shared_state         score=3.60 [module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]']\n  race_condition       score=0.00 [no signals found]\n  external_call        score=0.00 [no signals found]\nWinner: 'shared_state' selected (highest raw score)."
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_broken_index_out_of_range",
+    "root_cause_category": "shared_state",
+    "confidence": 0.97,
+    "explanation": "`test_broken_index_out_of_range` relies on mutable state that is not reset between test runs. Evidence: module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]'; module-level mutable: config = \"{'host': 'localhost', 'port': 8080}\". Because the state persists across tests (or across re-runs of the same test), outcomes vary with execution order or prior PRNG state.",
+    "reasoning_trace": "Categories considered:\n  timing               score=0.00 [no signals found]\n  shared_state         score=3.60 [module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]']\n  race_condition       score=0.00 [no signals found]\n  external_call        score=0.00 [no signals found]\nWinner: 'shared_state' selected (highest raw score)."
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_broken_wrong_math",
+    "root_cause_category": "shared_state",
+    "confidence": 0.97,
+    "explanation": "`test_broken_wrong_math` relies on mutable state that is not reset between test runs. Evidence: module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]'; module-level mutable: config = \"{'host': 'localhost', 'port': 8080}\". Because the state persists across tests (or across re-runs of the same test), outcomes vary with execution order or prior PRNG state.",
+    "reasoning_trace": "Categories considered:\n  timing               score=0.00 [no signals found]\n  shared_state         score=3.60 [module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]']\n  race_condition       score=0.00 [no signals found]\n  external_call        score=0.00 [no signals found]\nWinner: 'shared_state' selected (highest raw score)."
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_flaky_list_shuffle_order",
+    "root_cause_category": "shared_state",
+    "confidence": 0.97,
+    "explanation": "`test_flaky_list_shuffle_order` relies on mutable state that is not reset between test runs. Evidence: module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]'; module-level mutable: config = \"{'host': 'localhost', 'port': 8080}\". Because the state persists across tests (or across re-runs of the same test), outcomes vary with execution order or prior PRNG state.",
+    "reasoning_trace": "Categories considered:\n  timing               score=0.00 [no signals found]\n  shared_state         score=4.15 [module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]']\n  race_condition       score=0.00 [no signals found]\n  external_call        score=0.00 [no signals found]\nWinner: 'shared_state' selected (highest raw score)."
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_flaky_random_coin",
+    "root_cause_category": "shared_state",
+    "confidence": 0.97,
+    "explanation": "`test_flaky_random_coin` relies on mutable state that is not reset between test runs. Evidence: module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]'; module-level mutable: config = \"{'host': 'localhost', 'port': 8080}\". Because the state persists across tests (or across re-runs of the same test), outcomes vary with execution order or prior PRNG state.",
+    "reasoning_trace": "Categories considered:\n  timing               score=0.00 [no signals found]\n  shared_state         score=4.15 [module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]']\n  race_condition       score=0.00 [no signals found]\n  external_call        score=0.00 [no signals found]\nWinner: 'shared_state' selected (highest raw score)."
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_flaky_random_int_range",
+    "root_cause_category": "shared_state",
+    "confidence": 0.97,
+    "explanation": "`test_flaky_random_int_range` relies on mutable state that is not reset between test runs. Evidence: module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]'; module-level mutable: config = \"{'host': 'localhost', 'port': 8080}\". Because the state persists across tests (or across re-runs of the same test), outcomes vary with execution order or prior PRNG state.",
+    "reasoning_trace": "Categories considered:\n  timing               score=0.00 [no signals found]\n  shared_state         score=4.15 [module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]']\n  race_condition       score=0.00 [no signals found]\n  external_call        score=0.00 [no signals found]\nWinner: 'shared_state' selected (highest raw score)."
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_flaky_random_threshold",
+    "root_cause_category": "shared_state",
+    "confidence": 0.97,
+    "explanation": "`test_flaky_random_threshold` relies on mutable state that is not reset between test runs. Evidence: module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]'; module-level mutable: config = \"{'host': 'localhost', 'port': 8080}\". Because the state persists across tests (or across re-runs of the same test), outcomes vary with execution order or prior PRNG state.",
+    "reasoning_trace": "Categories considered:\n  timing               score=0.00 [no signals found]\n  shared_state         score=4.15 [module-level mutable: data = '[3, 1, 4, 1, 5, 9, 2, 6]']\n  race_condition       score=0.00 [no signals found]\n  external_call        score=0.00 [no signals found]\nWinner: 'shared_state' selected (highest raw score)."
+  },
+  {
     "test_name": "tests/sample_project/test_sample.py::test_random_failure_a",
     "root_cause_category": "shared_state",
     "confidence": 0.55,
