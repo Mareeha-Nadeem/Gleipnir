@@ -35,22 +35,23 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------------------------
-# Minimal custom CSS  (no em-dashes, no generic branding)
+# Custom CSS  — clean, modern, white/light SaaS theme
 # ---------------------------------------------------------------------------
 
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
     html, body, [class*="css"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        color: #111827;
     }
 
-    /* page background */
-    .stApp { background-color: #0f1117; }
+    /* ---- page background ---- */
+    .stApp { background-color: #F4F8FC; }
 
-    /* tighten the default Streamlit top padding */
+    /* ---- main content container ---- */
     .block-container {
         padding-top: 2rem;
         padding-bottom: 3rem;
@@ -59,128 +60,171 @@ st.markdown(
 
     /* ---- header strip ---- */
     .gleipnir-header {
-        background: linear-gradient(135deg, #1a1d27 0%, #161922 100%);
-        border: 1px solid #2a2d3a;
-        border-left: 4px solid #4f8ef7;
-        border-radius: 0 10px 10px 0;
-        padding: 1.2rem 1.5rem;
+        background: linear-gradient(135deg, #163B70 0%, #1e4d96 100%);
+        border-radius: 14px;
+        padding: 1.6rem 2rem;
         margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(22, 59, 112, 0.18);
     }
     .gleipnir-header h1 {
-        font-size: 1.9rem;
-        font-weight: 700;
+        font-size: 2rem;
+        font-weight: 800;
         letter-spacing: -0.03em;
-        color: #e8eaf0;
+        color: #ffffff;
         margin: 0;
     }
     .gleipnir-header p {
-        color: #8b92a8;
-        font-size: 0.85rem;
-        margin: 0.3rem 0 0;
+        color: #bfdbfe;
+        font-size: 0.9rem;
+        margin: 0.35rem 0 0;
         letter-spacing: 0.01em;
     }
 
     /* ---- section headings ---- */
     .section-heading {
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: #4f8ef7;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #2563EB;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        border-bottom: 1px solid #2a2d3a;
-        padding-bottom: 0.4rem;
+        letter-spacing: 0.12em;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 0.45rem;
         margin-bottom: 1rem;
     }
 
     /* ---- hours-lost callout ---- */
     .hours-callout {
-        background: #1a1d27;
-        border: 1px solid #2a2d3a;
-        border-left: 4px solid #4f8ef7;
-        border-radius: 0 10px 10px 0;
-        padding: 1rem 1.4rem;
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #4f8ef7;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-left: 5px solid #2563EB;
+        border-radius: 0 12px 12px 0;
+        padding: 1.2rem 1.6rem;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #2563EB;
         margin-top: 0.5rem;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
     }
     .hours-callout span {
         display: block;
-        font-size: 0.78rem;
-        font-weight: 400;
-        color: #8b92a8;
-        margin-top: 0.15rem;
-        letter-spacing: 0.02em;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6b7280;
+        margin-top: 0.2rem;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
     }
 
     /* ---- metric cards ---- */
     [data-testid="metric-container"] {
-        background: #1a1d27;
-        border: 1px solid #2a2d3a;
-        border-radius: 10px;
-        padding: 1rem 1.25rem;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.1rem 1.4rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
     [data-testid="metric-container"] label {
-        color: #8b92a8 !important;
-        font-size: 0.78rem !important;
-        font-weight: 500 !important;
+        color: #6b7280 !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.09em;
     }
     [data-testid="metric-container"] [data-testid="stMetricValue"] {
-        color: #e8eaf0 !important;
-        font-size: 2rem !important;
-        font-weight: 700 !important;
+        color: #163B70 !important;
+        font-size: 2.1rem !important;
+        font-weight: 800 !important;
     }
 
     /* ---- divider ---- */
-    hr { border-color: #2a2d3a !important; }
+    hr { border-color: #e5e7eb !important; }
 
     /* ---- expanders ---- */
     [data-testid="stExpander"] {
-        background: #1a1d27;
-        border: 1px solid #2a2d3a !important;
-        border-radius: 8px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 10px;
         margin-bottom: 0.5rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     }
     [data-testid="stExpander"] summary {
-        color: #c9cdd8 !important;
-        font-weight: 500;
+        color: #111827 !important;
+        font-weight: 600;
         font-size: 0.9rem;
     }
 
     /* ---- dataframe ---- */
     [data-testid="stDataFrame"] {
-        border: 1px solid #2a2d3a;
-        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
         overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
 
     /* ---- sliders ---- */
-    [data-testid="stSlider"] label { color: #c9cdd8 !important; font-size: 0.85rem !important; }
+    [data-testid="stSlider"] label {
+        color: #111827 !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+    }
+    [data-testid="stSlider"] [data-testid="stMarkdownContainer"] p {
+        color: #111827 !important;
+    }
+    /* slider track accent */
+    [data-testid="stSlider"] [role="slider"] { background: #2563EB !important; }
 
     /* ---- info boxes ---- */
-    .stAlert { background: #1a1d27 !important; border: 1px solid #2a2d3a !important; border-radius: 8px !important; }
+    .stAlert {
+        background: #eff6ff !important;
+        border: 1px solid #bfdbfe !important;
+        border-radius: 10px !important;
+        color: #1e3a8a !important;
+    }
+
+    /* ---- captions / small text ---- */
+    [data-testid="stCaptionContainer"] p {
+        color: #4b5563 !important;
+        font-size: 0.8rem !important;
+    }
+
+    /* ---- general text elements ---- */
+    p, li, label, span, div { color: #111827; }
 
     /* ---- badge pills ---- */
     .badge {
         display: inline-block;
-        padding: 2px 10px;
+        padding: 3px 11px;
         border-radius: 20px;
         font-size: 0.72rem;
-        font-weight: 600;
-        letter-spacing: 0.03em;
+        font-weight: 700;
+        letter-spacing: 0.04em;
         white-space: nowrap;
     }
-    .badge-flaky                     { background: #2d1a1e; color: #f87171; border: 1px solid #7f1d1d; }
-    .badge-stable                    { background: #1a2d1e; color: #4ade80; border: 1px solid #14532d; }
-    .badge-suspected_order_dependent { background: #2d2a1a; color: #fbbf24; border: 1px solid #78350f; }
-    .badge-broken                    { background: #251a2d; color: #c084fc; border: 1px solid #581c87; }
-    .badge-timing                    { background: #2d1a1e; color: #f87171; border: 1px solid #7f1d1d; }
-    .badge-shared_state              { background: #251a2d; color: #c084fc; border: 1px solid #581c87; }
-    .badge-race_condition            { background: #2d221a; color: #fb923c; border: 1px solid #7c2d12; }
-    .badge-external_call             { background: #1a2d1e; color: #4ade80; border: 1px solid #14532d; }
+    .badge-flaky                     { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .badge-stable                    { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .badge-suspected_order_dependent { background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; }
+    .badge-broken                    { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
+    .badge-timing                    { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .badge-shared_state              { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
+    .badge-race_condition            { background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; }
+    .badge-external_call             { background: #ccfbf1; color: #0f766e; border: 1px solid #5eead4; }
+
+    /* ---- chart bar override ---- */
+    .vega-embed canvas { border-radius: 8px; }
+
+    /* ---- st.info text ---- */
+    .stAlert p { color: #1e3a8a !important; }
+
+    /* ---- markdown inside expanders ---- */
+    [data-testid="stExpander"] p,
+    [data-testid="stExpander"] li,
+    [data-testid="stExpander"] strong {
+        color: #111827 !important;
+    }
+
+    /* ---- code blocks ---- */
+    [data-testid="stCode"] { border-radius: 8px; }
+    [data-testid="stCode"] code { color: #ffffff !important; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -291,7 +335,7 @@ if diagnosis:
         {"count": list(cat_counts.values())},
         index=[c.replace("_", " ").title() for c in cat_counts],
     )
-    st.bar_chart(chart_df, y="count", height=220)
+    st.bar_chart(chart_df, y="count", height=220, color="#2563EB")
 
     st.divider()
 
@@ -333,10 +377,10 @@ df = pd.DataFrame(rows)
 def _row_style(row: pd.Series):
     cls_val = row["Status"]
     if cls_val in ("flaky", "suspected_order_dependent"):
-        return ["background-color: #fff5f5"] * len(row)
+        return ["background-color: #fff1f1; color: #111827"] * len(row)
     if cls_val == "broken":
-        return ["background-color: #faf0ff"] * len(row)
-    return [""] * len(row)
+        return ["background-color: #f5f0ff; color: #111827"] * len(row)
+    return ["color: #111827"] * len(row)
 
 styled = (
     df.style
@@ -421,8 +465,9 @@ targets them first, alongside race conditions and unmocked external calls.
 # ---------------------------------------------------------------------------
 
 st.markdown(
-    "<p style='text-align:center; color:#57606a; font-size:0.75rem; margin-top:2rem;'>"
-    "Gleipnir &nbsp;|&nbsp; Made with IBM Bob"
+    "<p style='text-align:center; color:#6b7280; font-size:0.75rem; margin-top:2rem; "
+    "border-top: 1px solid #e5e7eb; padding-top: 1.2rem;'>"
+    "Gleipnir &nbsp;&nbsp;|&nbsp;&nbsp; Made with IBM Bob"
     "</p>",
     unsafe_allow_html=True,
 )
