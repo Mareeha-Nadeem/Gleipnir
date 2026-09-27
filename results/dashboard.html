@@ -220,14 +220,14 @@
     
     <div class="bar-row">
       <div class="bar-label">Timing</div>
-      <div class="bar-track"><div class="bar-fill timing" style="width:100%"></div></div>
-      <div class="bar-count">1</div>
+      <div class="bar-track"><div class="bar-fill timing" style="width:0%"></div></div>
+      <div class="bar-count">0</div>
     </div>
 
     <div class="bar-row">
       <div class="bar-label">Shared State</div>
       <div class="bar-track"><div class="bar-fill shared_state" style="width:100%"></div></div>
-      <div class="bar-count">1</div>
+      <div class="bar-count">2</div>
     </div>
 
     <div class="bar-row">
@@ -263,8 +263,21 @@
           <td><span class="badge flaky">flaky</span></td>
           <td>
             <div class="pass-bar">
-              <div class="pass-track"><div class="pass-fill" style="width:75%"></div></div>
-              <span style="font-size:12px;color:#57606a">75%</span>
+              <div class="pass-track"><div class="pass-fill" style="width:60%"></div></div>
+              <span style="font-size:12px;color:#57606a">60%</span>
+            </div>
+          </td>
+          <td><span class="cat-badge shared_state">shared state</span></td>
+          <td><span class="confidence">55%</span></td>
+        </tr>
+
+        <tr>
+          <td style="font-family:monospace;font-size:12px">test_random_failure_b</td>
+          <td><span class="badge flaky">flaky</span></td>
+          <td>
+            <div class="pass-bar">
+              <div class="pass-track"><div class="pass-fill" style="width:60%"></div></div>
+              <span style="font-size:12px;color:#57606a">60%</span>
             </div>
           </td>
           <td><span class="cat-badge shared_state">shared state</span></td>
@@ -273,19 +286,6 @@
 
         <tr>
           <td style="font-family:monospace;font-size:12px">test_timing_sensitive_failure</td>
-          <td><span class="badge flaky">flaky</span></td>
-          <td>
-            <div class="pass-bar">
-              <div class="pass-track"><div class="pass-fill" style="width:75%"></div></div>
-              <span style="font-size:12px;color:#57606a">75%</span>
-            </div>
-          </td>
-          <td><span class="cat-badge timing">timing</span></td>
-          <td><span class="confidence">90%</span></td>
-        </tr>
-
-        <tr>
-          <td style="font-family:monospace;font-size:12px">test_random_failure_b</td>
           <td><span class="badge stable">stable</span></td>
           <td>
             <div class="pass-bar">

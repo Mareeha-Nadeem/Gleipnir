@@ -1,7 +1,7 @@
-"""MCP server for the flaky-test-fixer project.
+"""MCP server for Gleipnir.
 
-Exposes four tools that wrap the standalone CLI modules so Bob (or any MCP
-client) can trigger flaky-test diagnosis from a conversation.
+Exposes five tools that wrap the pipeline modules so Bob (or any MCP client)
+can trigger flaky-test analysis from a conversation.
 
 The standalone modules (runner.py, detector.py, src/diagnosis/diagnose.py)
 have zero dependency on this file and continue to work without Bob installed.
@@ -25,12 +25,14 @@ from mcp.server.mcpserver import MCPServer
 from src.runner import run_suite, _save_results
 from src.detector import detect_flaky_tests
 from src.diagnosis.diagnose import diagnose_flaky_tests
+from src.dashboard import launch_dashboard
 
 mcp = MCPServer(
-    "flaky-test-fixer",
+    "gleipnir",
     instructions=(
-        "Tools for detecting and diagnosing flaky tests. "
-        "Use run_full_pipeline for a complete analysis, or call "
+        "Gleipnir: flaky test detection and root-cause diagnosis. "
+        "Use run_and_show_dashboard for the full pipeline with Streamlit dashboard, "
+        "run_full_pipeline for a headless analysis, or call "
         "run_tests -> detect_flaky -> diagnose_flaky individually."
     ),
 )
@@ -183,6 +185,63 @@ def run_full_pipeline(
 
 
 # ---------------------------------------------------------------------------
+# Tool: run_and_show_dashboard  (tool 5)
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def run_and_show_dashboard(
+    test_path: str = "tests/sample_project",
+    n_runs: int = 15,
+    port: int = 8501,
+) -> dict:
+    """Run the full pipeline and launch the Streamlit dashboard.
+
+    Chains: run_tests -> detect_flaky -> diagnose_flaky, then starts
+    `streamlit run src/dashboard/app.py` in a subprocess. Streamlit opens
+    the browser automatically on http://localhost:<port>.
+
+    Ask Bob: "run the full pipeline and show me the dashboard."
+
+    Args:
+        test_path: Path to the test file or directory (default: tests/sample_project).
+        n_runs:    Number of suite repetitions (default: 15).
+        port:      Streamlit server port (default: 8501).
+
+    Returns:
+        Per-stage summaries plus dashboard launch info.
+    """
+    # Resolve path relative to project root
+    if not Path(test_path).is_absolute():
+        test_path = str(_ROOT / test_path)
+
+    # Stage 1
+    run_summary = run_tests(test_path, n_runs)
+
+    # Stage 2
+    flaky_summary = detect_flaky(run_summary["output_path"])
+
+    # Stage 3
+    diagnosis_result = diagnose_flaky(flaky_summary["output_path"])
+
+    # Stage 4 -- launch Streamlit (non-blocking; server stays alive)
+    launch_dashboard(port=port, block=False)
+
+    return {
+        "stage_1_run": run_summary,
+        "stage_2_detect": flaky_summary,
+        "stage_3_diagnose": {
+            "total_diagnosed": diagnosis_result["total_diagnosed"],
+            "output_path": diagnosis_result["output_path"],
+            "diagnoses": diagnosis_result["diagnoses"],
+        },
+        "stage_4_dashboard": {
+            "url": f"http://localhost:{port}",
+            "streamlit_launched": True,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
 # Entry-point
 # ---------------------------------------------------------------------------
 
@@ -190,5 +249,5 @@ if __name__ == "__main__":
     # stdio transport — Bob spawns this process and communicates over stdin/stdout.
     # All logging must go to stderr to avoid corrupting the MCP protocol stream.
     import sys
-    print("flaky-test-fixer MCP server starting on stdio ...", file=sys.stderr)
+    print("Gleipnir MCP server starting on stdio ...", file=sys.stderr)
     mcp.run(transport="stdio")

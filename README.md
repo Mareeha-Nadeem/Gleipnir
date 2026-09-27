@@ -1,8 +1,7 @@
-# flaky-test-fixer
+# Gleipnir
 
-A three-stage pipeline that detects and diagnoses flaky tests in any pytest
-suite.  Runs entirely on your machine — no internet connection, no external
-service, no AI API key required.
+Detects and diagnoses flaky tests in any pytest suite. Runs entirely on your
+machine -- no internet connection, no external service, no API key required.
 
 ---
 
@@ -11,10 +10,12 @@ service, no AI API key required.
 1. [Requirements](#requirements)
 2. [Installation](#installation)
 3. [Quick start](#quick-start)
-4. [Running each stage manually](#running-each-stage-manually)
-   - [Stage 1 — Run](#stage-1--run)
-   - [Stage 2 — Detect](#stage-2--detect)
-   - [Stage 3 — Diagnose](#stage-3--diagnose)
+4. [Running the pipeline](#running-the-pipeline)
+   - [One command](#one-command)
+   - [Stage 1 -- Run](#stage-1----run)
+   - [Stage 2 -- Detect](#stage-2----detect)
+   - [Stage 3 -- Diagnose](#stage-3----diagnose)
+   - [Stage 4 -- Dashboard](#stage-4----dashboard)
 5. [Output files](#output-files)
 6. [Using with Bob (MCP)](#using-with-bob-mcp)
 7. [Architecture](#architecture)
@@ -32,41 +33,47 @@ service, no AI API key required.
 ## Installation
 
 ```powershell
-# from the flaky-test-fixer directory
 pip install -r requirements.txt
 ```
 
-This installs pytest and the four pytest plugins the runner needs
-(`pytest-json-report`, `pytest-random-order`, `pytest-xdist`) plus the MCP
-server library (`mcp[cli]`).
+Installs pytest and its plugins, the MCP server library, Streamlit, and pandas.
 
 ---
 
 ## Quick start
 
-Run the full three-stage pipeline against the bundled sample suite:
+Run the full pipeline against the bundled sample suite and open the dashboard:
 
 ```powershell
-# from the flaky-test-fixer directory
-python -c "
-import sys; sys.path.insert(0, '.')
-from mcp_server import run_full_pipeline
-import json
-result = run_full_pipeline('tests/sample_project', n_runs=15)
-print(json.dumps(result, indent=2))
-"
+python run_all.py
 ```
 
-Or call each stage from the CLI (see below) — the CLI is the primary interface
-and works without importing the MCP server at all.
+With a custom path and run count:
+
+```powershell
+python run_all.py tests/sample_project --runs 15
+python run_all.py path/to/your/tests --runs 30
+```
+
+Stages 1-3 run automatically, then Streamlit starts and opens the browser.
+Press `Ctrl+C` to stop the dashboard server.
 
 ---
 
-## Running each stage manually
+## Running the pipeline
 
-All CLI commands must be run from inside the `flaky-test-fixer/` directory.
+### One command
 
-### Stage 1 — Run
+`run_all.py` chains all four stages:
+
+```
+[1/4] Running test suite
+[2/4] Detecting flakiness
+[3/4] Diagnosing root causes
+[4/4] Launching dashboard  ->  http://localhost:8501
+```
+
+### Stage 1 -- Run
 
 Executes the suite `N` times, alternating between randomised order and
 parallel execution, and writes raw per-test records to JSON.
@@ -77,17 +84,12 @@ python src/runner.py [TEST_PATH] [--runs N] [--output PATH]
 
 | Argument | Default | Description |
 |---|---|---|
-| `TEST_PATH` | `tests/sample_project` | Path to your test file or directory |
+| `TEST_PATH` | `tests/sample_project` | Path to test file or directory |
 | `--runs N` | `15` | Number of times to run the suite |
 | `--output PATH` | `results/run_results.json` | Where to write the raw records |
 
-**Example — run your own suite 20 times:**
-```powershell
-python src/runner.py path/to/your/tests --runs 20
-```
+Output -- `results/run_results.json`, one record per test per run:
 
-**Output:** `results/run_results.json` — a flat JSON array, one record per
-test per run:
 ```json
 [
   {
@@ -96,14 +98,11 @@ test per run:
     "passed": true,
     "duration": 0.003,
     "parallel": false
-  },
-  ...
+  }
 ]
 ```
 
----
-
-### Stage 2 — Detect
+### Stage 2 -- Detect
 
 Reads `run_results.json`, computes pass rates, and classifies every test.
 
@@ -111,210 +110,169 @@ Reads `run_results.json`, computes pass rates, and classifies every test.
 python src/detector.py [--results PATH]
 ```
 
-| Argument | Default | Description |
-|---|---|---|
-| `--results PATH` | `results/run_results.json` | Path to Stage 1 output |
-
-**Example:**
-```powershell
-python src/detector.py --results results/run_results.json
-```
-
-Prints a summary table and writes `results/flakiness_report.json`.
-
-**Classifications:**
-
-| Label | Condition |
+| Classification | Condition |
 |---|---|
-| `flaky` | Pass rate strictly between 5 % and 95 % |
-| `suspected_order_dependent` | Always fails AND execution context varies (mixed parallel/serial runs, spread durations) |
+| `flaky` | Pass rate strictly between 5% and 95% |
+| `suspected_order_dependent` | Always fails AND execution context varies |
 | `broken` | Always fails with no context variation |
 | `stable` | Everything else |
 
----
+Output -- `results/flakiness_report.json`.
 
-### Stage 3 — Diagnose
+### Stage 3 -- Diagnose
 
 Reads `flakiness_report.json`, dispatches one isolated worker process per
-flaky or suspected test in parallel, and writes root-cause diagnoses.
+flaky test in parallel, and writes root-cause diagnoses.
 
 ```powershell
 python -m src.diagnosis.diagnose [--report PATH]
 ```
 
-| Argument | Default | Description |
-|---|---|---|
-| `--report PATH` | `results/flakiness_report.json` | Path to Stage 2 output |
-
-**Example:**
-```powershell
-python -m src.diagnosis.diagnose --report results/flakiness_report.json
-```
-
-Prints a timestamped per-worker log (so you can see parallelism) and a
-summary table, then writes `results/diagnosis_report.json`.
-
-**Root-cause categories:**
-
-| Category | What the worker looks for |
+| Root-cause category | What the worker looks for |
 |---|---|
 | `timing` | `time.sleep()`, `time.time()`, `time_ns()`, time-modulo assertions |
-| `shared_state` | Module-level mutable objects (`list`/`dict`/`set`), `global`/`nonlocal` declarations, unseeded `random.*` calls, broad-scope pytest fixtures |
-| `race_condition` | `Thread`, `Process`, `asyncio.gather`, `asyncio.create_task` without synchronisation |
-| `external_call` | Unmocked `requests.*`, `urllib`, `httpx`, `subprocess.*`, filesystem I/O |
+| `shared_state` | Module-level mutable objects, unseeded `random.*` calls, broad-scope fixtures |
+| `race_condition` | `Thread`, `Process`, `asyncio.gather` without synchronisation |
+| `external_call` | Unmocked `requests.*`, `urllib`, `subprocess.*`, filesystem I/O |
+
+Output -- `results/diagnosis_report.json`.
+
+### Stage 4 -- Dashboard
+
+The dashboard is a Streamlit app. Launch it standalone at any time:
+
+```powershell
+streamlit run src/dashboard/app.py
+```
+
+Or via the module entry point:
+
+```powershell
+python -m src.dashboard
+```
+
+Opens at `http://localhost:8501`. Shows:
+
+- Summary metrics (total, flaky, stable, diagnosed)
+- Live hours-lost calculator with sliders
+- Root-cause breakdown bar chart
+- Colour-coded test results table with fix hints
+- Per-test expandable sections with full explanation and reasoning trace
 
 ---
 
 ## Output files
 
-All output lands in `results/` by default.
-
 | File | Written by | Contents |
 |---|---|---|
-| `run_results.json` | Stage 1 | Raw pass/fail records for every test × every run |
-| `flakiness_report.json` | Stage 2 | Per-test classification and pass rate |
-| `diagnosis_report.json` | Stage 3 | Root-cause category, confidence score, explanation, and reasoning trace per flaky test |
+| `results/run_results.json` | Stage 1 | Raw pass/fail records for every test x every run |
+| `results/flakiness_report.json` | Stage 2 | Per-test classification and pass rate |
+| `results/diagnosis_report.json` | Stage 3 | Root-cause category, confidence, explanation, reasoning trace |
 
 ---
 
 ## Using with Bob (MCP)
 
-`mcp_server.py` is an **optional** add-on.  It wraps the three stages as MCP
-tools so Bob can call them directly from a conversation.  The standalone CLI
-above works without it.
+`mcp_server.py` is an optional add-on. It exposes the pipeline as five MCP
+tools so Bob can run the full analysis from a conversation.
 
 ### Register the server
 
-Add this to your workspace `.bob/mcp.json` (create the file if it doesn't
-exist):
+Add to `.bob/mcp.json` in your workspace (create it if it does not exist):
 
 ```json
 {
   "mcpServers": {
-    "flaky-test-fixer": {
+    "gleipnir": {
       "command": "C:/path/to/python.exe",
-      "args": ["C:/path/to/flaky-test-fixer/mcp_server.py"],
-      "cwd": "C:/path/to/flaky-test-fixer"
+      "args": ["C:/path/to/Gleipnir/mcp_server.py"],
+      "cwd": "C:/path/to/Gleipnir"
     }
   }
 }
 ```
 
-Replace the paths with absolute paths on your machine.  Bob hot-reloads on
-save — the four tools appear in Bob's MCP panel immediately.
+Replace the paths with absolute paths on your machine. Bob hot-reloads on save.
 
 ### Available MCP tools
 
 | Tool | What it does |
 |---|---|
-| `run_tests(test_path, n_runs)` | Stage 1 — runs the suite |
-| `detect_flaky(results_path)` | Stage 2 — classifies tests |
-| `diagnose_flaky(report_path)` | Stage 3 — diagnoses root causes |
-| `run_full_pipeline(test_path, n_runs)` | All three stages chained, returns a single result dict with `stage_1_run`, `stage_2_detect`, `stage_3_diagnose` |
+| `run_tests(test_path, n_runs)` | Stage 1 -- runs the suite |
+| `detect_flaky(results_path)` | Stage 2 -- classifies tests |
+| `diagnose_flaky(report_path)` | Stage 3 -- diagnoses root causes |
+| `run_full_pipeline(test_path, n_runs)` | Stages 1-3 chained, headless |
+| `run_and_show_dashboard(test_path, n_runs, port)` | Stages 1-3 then launches Streamlit |
+
+Ask Bob: **"run the full pipeline and show me the dashboard"** to trigger
+`run_and_show_dashboard`.
 
 ---
 
 ## Architecture
 
 ```
-                        ┌─────────────────────────────────────────┐
-                        │           run_full_pipeline()            │
-                        │  (mcp_server.py — optional MCP wrapper)  │
-                        └──────┬──────────┬──────────┬────────────┘
-                               │          │          │
-                    ┌──────────▼──┐  ┌────▼──────┐  ┌▼──────────────────┐
-                    │  runner.py  │  │detector.py│  │  diagnose.py       │
-                    │  Stage 1    │  │  Stage 2  │  │  Stage 3           │
-                    └──────┬──────┘  └────┬──────┘  └──────┬────────────┘
-                           │              │                 │
-              Runs pytest   │    Reads     │    Reads        │  Spawns N
-              N times with  │    run_      │    flakiness_   │  worker processes
-              --random-order│    results   │    report       │  in parallel
-              and -n auto   │    .json     │    .json        │  (one per flaky
-                           │              │                 │   test)
-                           ▼              ▼                 ▼
-                    run_results     flakiness_report   diagnosis_report
-                    .json           .json              .json
+run_all.py  (or run_and_show_dashboard MCP tool)
+    |
+    |-- [1/4] src/runner.py
+    |         Calls pytest N times, alternating:
+    |           odd  runs  -> --random-order  (order-dependent failures)
+    |           even runs  -> -n auto         (concurrency failures)
+    |         Writes: results/run_results.json
+    |
+    |-- [2/4] src/detector.py
+    |         Groups by test name, computes pass rates, classifies.
+    |         Band: 5%-95% = flaky. Always-fail + context varies = suspected.
+    |         Writes: results/flakiness_report.json
+    |
+    |-- [3/4] src/diagnosis/diagnose.py
+    |         ProcessPoolExecutor -- one OS process per flaky test, all parallel.
+    |         Each process independently reads source + conftest, parses AST,
+    |         scores 4 categories, returns diagnosis. No shared state.
+    |         Writes: results/diagnosis_report.json
+    |
+    `-- [4/4] src/dashboard/app.py  (Streamlit)
+              Loads the three JSON files, renders interactive dashboard.
+              Launched via subprocess; Streamlit opens the browser itself.
 ```
 
-### Stage 1 — `src/runner.py`
+### Why ProcessPoolExecutor
 
-**What it does:** Calls pytest as a subprocess `N` times. Odd-numbered runs
-use `--random-order` (stresses test-order dependencies). Even-numbered runs
-use `-n auto` (parallel via xdist, stresses concurrency and shared-state
-bugs). Results are captured via `pytest-json-report` into a temp file per
-run, then merged into a single flat list.
+Each worker runs in a separate OS process with its own memory space. No
+shared `scores` or `evidence` dicts, no GIL, and genuine CPU-level
+parallelism for the AST parsing work.
 
-**Why both modes:** A test that only fails in a specific order won't show up
-in parallel runs and vice versa. Alternating maximises detection surface.
+### Why static AST analysis
 
-**Output shape:** One JSON object per test per run with `test_name`,
-`run_id`, `passed`, `duration`, `parallel`.
-
----
-
-### Stage 2 — `src/detector.py`
-
-**What it does:** Groups records by `test_name`, computes pass rate across
-all runs, and applies the classification rules below.
-
-**Why the 5 %–95 % band:** Tests that fail less than 5 % or more than 95 %
-of the time are treated as stable or broken respectively — the band is wide
-enough to catch real flakiness without false-positiving on rare environment
-noise.
-
-**`suspected_order_dependent`:** A test that _always_ fails but shows
-varying durations or was run in both serial and parallel contexts is more
-likely failing due to state pollution from a prior test than being genuinely
-broken. This distinction matters for triage.
-
----
-
-### Stage 3 — `src/diagnosis/diagnose.py`
-
-**What it does:** For each test classified as `flaky` or
-`suspected_order_dependent`, spawns an isolated OS-level worker process
-(`ProcessPoolExecutor`, `max_workers=N` so all start simultaneously). Each
-worker:
-
-1. Reads the test source file itself from the `test_name` node-id path.
-2. Reads `conftest.py` from the same directory if it exists.
-3. Parses both files with Python's `ast` module independently.
-4. Scores four root-cause categories by walking the AST.
-5. Picks the highest-scoring category as the diagnosis.
-6. Computes a calibrated confidence: high (≥ 0.85) only when AST evidence
-   is strong _and_ the winning category is clearly separated from all
-   others.
-
-**Why `ProcessPoolExecutor` not `ThreadPoolExecutor`:** Each worker process
-has its own memory space — no shared `scores` or `evidence` dicts, no GIL
-contention, and genuine CPU-level parallelism for the AST parsing work.
-
-**Why static analysis, not heuristics:** AST parsing catches the actual
-structure of the code (e.g. a `global` declaration inside a nested function,
-a `@pytest.fixture(scope="module")` on a function that returns a mutable
-list) rather than just string patterns, so false-positive rates are lower.
+AST parsing catches actual code structure -- a `global` declaration inside a
+nested function, a `@pytest.fixture(scope="module")` on a function returning
+a mutable list -- rather than text patterns, keeping false-positive rates low.
 
 ---
 
 ## Project layout
 
 ```
-flaky-test-fixer/
+Gleipnir/
+├── run_all.py                 # One-command pipeline runner
 ├── mcp_server.py              # Optional MCP server (Bob integration)
 ├── requirements.txt
 ├── docs/
-│   └── architecture.md        # Detailed architecture reference
-├── results/                   # All pipeline output (git-ignored except .gitkeep)
+│   └── architecture.md
+├── results/                   # Pipeline output (git-ignored except .gitkeep)
 │   ├── run_results.json
 │   ├── flakiness_report.json
 │   └── diagnosis_report.json
 ├── src/
 │   ├── runner.py              # Stage 1
 │   ├── detector.py            # Stage 2
-│   └── diagnosis/
-│       └── diagnose.py        # Stage 3
+│   ├── diagnosis/
+│   │   └── diagnose.py        # Stage 3
+│   └── dashboard/
+│       ├── app.py             # Stage 4 -- Streamlit app
+│       ├── __init__.py        # launch_dashboard() helper
+│       └── __main__.py        # python -m src.dashboard entry point
 └── tests/
     └── sample_project/
-        └── test_sample.py     # Intentionally flaky sample suite for testing
+        └── test_sample.py     # Intentionally flaky sample suite
 ```
