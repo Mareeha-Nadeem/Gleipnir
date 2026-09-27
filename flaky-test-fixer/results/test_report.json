@@ -1,0 +1,132 @@
+{
+  "created": 1790436807.1762304,
+  "duration": 0.10299897193908691,
+  "exitcode": 0,
+  "root": "E:\\ibmbobproject\\Gleipnir\\flaky-test-fixer",
+  "environment": {},
+  "summary": {
+    "passed": 3,
+    "total": 3,
+    "collected": 3
+  },
+  "collectors": [
+    {
+      "nodeid": "",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests/sample_project",
+          "type": "Dir"
+        }
+      ]
+    },
+    {
+      "nodeid": "tests/sample_project/test_sample.py",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests/sample_project/test_sample.py::test_random_failure_a",
+          "type": "Function",
+          "lineno": 4
+        },
+        {
+          "nodeid": "tests/sample_project/test_sample.py::test_random_failure_b",
+          "type": "Function",
+          "lineno": 8
+        },
+        {
+          "nodeid": "tests/sample_project/test_sample.py::test_timing_sensitive_failure",
+          "type": "Function",
+          "lineno": 12
+        }
+      ]
+    },
+    {
+      "nodeid": "tests/sample_project",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests/sample_project/test_sample.py",
+          "type": "Module"
+        }
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "nodeid": "tests/sample_project/test_sample.py::test_random_failure_b",
+      "lineno": 8,
+      "outcome": "passed",
+      "keywords": [
+        "test_random_failure_b",
+        "test_sample.py",
+        "sample_project",
+        "tests",
+        "flaky-test-fixer",
+        ""
+      ],
+      "setup": {
+        "duration": 0.0011440999805927277,
+        "outcome": "passed"
+      },
+      "call": {
+        "duration": 0.0014048999873921275,
+        "outcome": "passed"
+      },
+      "teardown": {
+        "duration": 0.0013471998972818255,
+        "outcome": "passed"
+      }
+    },
+    {
+      "nodeid": "tests/sample_project/test_sample.py::test_random_failure_a",
+      "lineno": 4,
+      "outcome": "passed",
+      "keywords": [
+        "test_random_failure_a",
+        "test_sample.py",
+        "sample_project",
+        "tests",
+        "flaky-test-fixer",
+        ""
+      ],
+      "setup": {
+        "duration": 0.001984399976208806,
+        "outcome": "passed"
+      },
+      "call": {
+        "duration": 0.0014509999891743064,
+        "outcome": "passed"
+      },
+      "teardown": {
+        "duration": 0.002062499988824129,
+        "outcome": "passed"
+      }
+    },
+    {
+      "nodeid": "tests/sample_project/test_sample.py::test_timing_sensitive_failure",
+      "lineno": 12,
+      "outcome": "passed",
+      "keywords": [
+        "test_timing_sensitive_failure",
+        "test_sample.py",
+        "sample_project",
+        "tests",
+        "flaky-test-fixer",
+        ""
+      ],
+      "setup": {
+        "duration": 0.0034216000931337476,
+        "outcome": "passed"
+      },
+      "call": {
+        "duration": 0.001687800046056509,
+        "outcome": "passed"
+      },
+      "teardown": {
+        "duration": 0.0010798999574035406,
+        "outcome": "passed"
+      }
+    }
+  ]
+}
