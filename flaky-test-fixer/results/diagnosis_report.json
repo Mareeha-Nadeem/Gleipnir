@@ -7,13 +7,6 @@
     "reasoning_trace": "Categories considered:\n  timing               score=0.00 [no signals found]\n  shared_state         score=0.55 [unseeded random call: 'random.random()' \u2014 module-level PRNG state not reset between tests]\n  race_condition       score=0.00 [no signals found]\n  external_call        score=0.00 [no signals found]\nWinner: 'shared_state' selected (highest raw score)."
   },
   {
-    "test_name": "tests/sample_project/test_sample.py::test_random_failure_b",
-    "root_cause_category": "shared_state",
-    "confidence": 0.55,
-    "explanation": "`test_random_failure_b` relies on mutable state that is not reset between test runs. Evidence: unseeded random call: 'random.choice([True, True, True, False])' \u2014 module-level PRNG state not reset between tests. Because the state persists across tests (or across re-runs of the same test), outcomes vary with execution order or prior PRNG state.",
-    "reasoning_trace": "Categories considered:\n  timing               score=0.00 [no signals found]\n  shared_state         score=0.55 [unseeded random call: 'random.choice([True, True, True, False])' \u2014 module-level PRNG state not reset between tests]\n  race_condition       score=0.00 [no signals found]\n  external_call        score=0.00 [no signals found]\nWinner: 'shared_state' selected (highest raw score)."
-  },
-  {
     "test_name": "tests/sample_project/test_sample.py::test_timing_sensitive_failure",
     "root_cause_category": "timing",
     "confidence": 0.9,

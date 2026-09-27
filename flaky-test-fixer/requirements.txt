@@ -2,3 +2,4 @@ pytest
 pytest-json-report
 pytest-random-order
 pytest-xdist
+mcp[cli]
