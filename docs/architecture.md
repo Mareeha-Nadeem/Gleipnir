@@ -61,9 +61,10 @@ python src/detector.py [--results PATH]
 
 ### Stage 3 — `diagnosis/diagnose.py`
 
-`diagnose_flaky_tests(report_path)` dispatches one static-analysis worker per
-flaky test in parallel via `ThreadPoolExecutor`.  Each worker parses the test
-source with Python's `ast` module and scores four root-cause categories:
+`diagnose_flaky_tests(report_path)` dispatches one isolated worker process per
+flaky test in parallel via `ProcessPoolExecutor`.  Each worker independently
+reads its own source file, parses it with Python's `ast` module, and scores
+four root-cause categories with no shared state between workers:
 
 | Category | Signal |
 |---|---|

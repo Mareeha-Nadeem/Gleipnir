@@ -1,18 +1,33 @@
-"""Subagent-based root-cause diagnosis for flaky tests.
+"""Root-cause diagnosis for flaky tests.
 
-Each flaky test is diagnosed by an independent worker dispatched in parallel via
-ThreadPoolExecutor.  Workers do static analysis with Python's ``ast`` module so
-pattern detection is precise rather than regex-based.
+Each flaky test is diagnosed by an isolated worker function dispatched in
+parallel via ProcessPoolExecutor.  Workers share NO state: each receives only
+its own test_entry dict, reads its own source file and conftest.py, and
+performs its own independent AST analysis before returning a structured result.
 
-Timestamp logs per worker are printed to stdout so parallelism is verifiable in
-screenshots / demo output.
+ProcessPoolExecutor gives true CPU-level parallelism (separate OS processes),
+bypassing the CPython GIL.  Because workers do no inter-process communication
+beyond the initial argument and the returned dict, there is no shared mutable
+state to synchronise.
+
+Timestamp logs per worker are printed to stdout so parallelism is verifiable
+in screenshots / demo output.
+
+NOTE ON "SUBAGENTS"
+-------------------
+This module does NOT use AI agent instances.  The platform (IBM Bob) exposes a
+spawn_subagent capability only as an assistant-side tool during a conversation
+turn — it is NOT a Python API, MCP resource, or callable SDK.  The workers
+here are OS processes performing deterministic static analysis.  They are
+labelled ``_worker`` rather than ``_subagent_worker`` to reflect what they
+actually are.
 """
 
 import ast
 import json
 import os
 import textwrap
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
@@ -31,6 +46,10 @@ def diagnose_flaky_tests(
     report_path: str = "results/flakiness_report.json",
 ) -> list[dict]:
     """Load flakiness report, diagnose each flaky/suspected test in parallel.
+
+    Each target test is dispatched to an independent OS-level worker process
+    (ProcessPoolExecutor) so that analyses run concurrently without sharing
+    any in-process state.
 
     Parameters
     ----------
@@ -57,14 +76,20 @@ def diagnose_flaky_tests(
         if t["classification"] in ("flaky", "suspected_order_dependent")
     ]
 
-    print(f"\n[diagnose] Dispatching {len(targets)} subagent(s) in parallel ...\n")
+    n = len(targets)
+    print(f"\n[diagnose] Dispatching {n} independent worker process(es) in parallel ...\n")
 
     results: list[dict] = []
 
-    # Dispatch all workers simultaneously; collect as they complete
-    with ThreadPoolExecutor(max_workers=len(targets) or 1) as pool:
+    if n == 0:
+        _save_report(results, str(Path(report_path).parent / "diagnosis_report.json"))
+        return results
+
+    # Dispatch all workers simultaneously in separate processes; collect as
+    # they complete.  max_workers=n ensures all start at once.
+    with ProcessPoolExecutor(max_workers=n) as pool:
         future_to_test = {
-            pool.submit(_subagent_worker, t): t for t in targets
+            pool.submit(_worker, t): t for t in targets
         }
         for future in as_completed(future_to_test):
             result = future.result()
@@ -79,41 +104,49 @@ def diagnose_flaky_tests(
 
 
 # ---------------------------------------------------------------------------
-# Subagent worker
+# Isolated per-test worker
 # ---------------------------------------------------------------------------
 
 
-def _subagent_worker(test_entry: dict) -> dict:
-    """Independently diagnose one flaky test.  Runs in its own thread.
+def _worker(test_entry: dict) -> dict:
+    """Independently diagnose one flaky test in its own OS process.
+
+    This function is the complete, self-contained unit of analysis for one
+    test.  It receives only ``test_entry`` (a plain dict), reads the source
+    files it needs itself, and returns a plain dict.  It shares NO state with
+    other workers or with the orchestrating process.
 
     Steps
     -----
     a. Locate and read the test source file from the test_name node-id.
     b. Read conftest.py in the same directory if it exists.
-    c. Parse both files with ``ast`` and score each root-cause category.
+    c. Parse both files with ``ast`` and score each root-cause category
+       independently, without any shared scoring function or shared evidence
+       accumulator.
     d. Return a structured diagnosis dict.
     """
+    # Import inside the worker so the subprocess has its own module state.
+    import ast
+    import json
+    from datetime import datetime
+    from pathlib import Path
+
     test_name: str = test_entry["test_name"]
     start_ts = datetime.now()
     print(f"  [{start_ts.strftime('%H:%M:%S.%f')}] START  {test_name}")
 
-    # ---- a. Locate source ----
+    # ---- a. Locate source ----------------------------------------
     # test_name format: "path/to/test_file.py::test_function"
     file_path, _, func_name = test_name.partition("::")
     source = _read_file_safe(file_path)
     conftest_path = str(Path(file_path).parent / "conftest.py")
     conftest_source = _read_file_safe(conftest_path)
 
-    combined_source = source
-    if conftest_source:
-        combined_source = source + "\n\n# --- conftest.py ---\n" + conftest_source
+    # ---- b/c. Independent analysis --------------------------------
+    scores, evidence = _analyse_independent(source, func_name, conftest_source)
 
-    # ---- b/c. Analyse and score ----
-    scores, evidence = _analyse(source, func_name, conftest_source)
-
-    # ---- d. Build result ----
+    # ---- d. Build result ------------------------------------------
     best_category = max(scores, key=lambda c: scores[c])
-    best_score = scores[best_category]
     confidence = _normalise_confidence(scores, best_category)
 
     explanation = _build_explanation(
@@ -138,24 +171,37 @@ def _subagent_worker(test_entry: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Static analysis
+# Independent static analysis (no shared state, runs inside each worker)
 # ---------------------------------------------------------------------------
 
+# These category constants are redefined locally so the worker subprocess does
+# not rely on module-level state from the parent process.
+_CATEGORIES = ("timing", "shared_state", "race_condition", "external_call")
 
-def _analyse(
-    source: str,
+
+def _analyse_independent(
+    source: str | None,
     func_name: str,
     conftest: str | None,
 ) -> tuple[dict[str, float], dict[str, list[str]]]:
-    """Score each root-cause category by AST inspection.
+    """Score each root-cause category by independent AST inspection.
+
+    This function is entirely self-contained: it allocates its own scores and
+    evidence dicts, parses source independently, and returns without touching
+    any module-level mutable state.
 
     Returns
     -------
-    scores : dict mapping category -> raw score (0.0–1.0)
+    scores  : dict mapping category -> raw score (0.0–N)
     evidence: dict mapping category -> list of human-readable findings
     """
-    scores: dict[str, float] = {c: 0.0 for c in CATEGORIES}
-    evidence: dict[str, list[str]] = {c: [] for c in CATEGORIES}
+    import ast  # local import — worker process safety
+
+    scores: dict[str, float] = {c: 0.0 for c in _CATEGORIES}
+    evidence: dict[str, list[str]] = {c: [] for c in _CATEGORIES}
+
+    if not source:
+        return scores, evidence
 
     try:
         tree = ast.parse(source)
@@ -165,28 +211,25 @@ def _analyse(
     # Isolate just the target function's AST node (falls back to whole file)
     func_tree = _extract_function(tree, func_name) or tree
 
-    # --- timing ---
+    # ---- timing --------------------------------------------------
     for node in ast.walk(func_tree):
-        # sleep() calls
         if isinstance(node, ast.Call):
             name = _call_name(node)
             if name in ("sleep", "time.sleep"):
                 scores["timing"] += 0.9
                 evidence["timing"].append(f"sleep() call: {ast.unparse(node)!r}")
-            # time.time() / time.time_ns() used in a comparison
             if name in ("time.time", "time.time_ns", "time_ns", "time"):
                 scores["timing"] += 0.7
                 evidence["timing"].append(f"time call: {ast.unparse(node)!r}")
-        # Compare involving time values
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mod):
             unparsed = ast.unparse(node)
             if "time" in unparsed:
                 scores["timing"] += 0.2
                 evidence["timing"].append(f"modulo on time value: {unparsed!r}")
 
-    # --- shared_state ---
-    # Module-level mutable assignments (list, dict, set literals) visible to tests
-    for node in ast.walk(tree):  # whole file scope
+    # ---- shared_state --------------------------------------------
+    # Module-level mutable assignments (list, dict, set literals)
+    for node in ast.walk(tree):  # whole-file scope
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name) and not target.id.startswith("_"):
@@ -196,7 +239,6 @@ def _analyse(
                         evidence["shared_state"].append(
                             f"module-level mutable: {target.id} = {ast.unparse(val)!r}"
                         )
-        # global / nonlocal declarations inside the function
         if isinstance(node, (ast.Global, ast.Nonlocal)):
             scores["shared_state"] += 0.5
             evidence["shared_state"].append(
@@ -204,7 +246,7 @@ def _analyse(
                 f"declaration: {node.names}"
             )
 
-    # conftest fixtures with scope != "function" sharing mutable objects
+    # conftest fixtures with scope != "function"
     if conftest:
         try:
             ctree = ast.parse(conftest)
@@ -220,40 +262,7 @@ def _analyse(
                                 f"conftest fixture '{node.name}' with broad scope"
                             )
 
-    # --- race_condition ---
-    for node in ast.walk(func_tree):
-        if isinstance(node, ast.Call):
-            name = _call_name(node)
-            # Thread / Process creation without obvious locking
-            if name in (
-                "Thread", "threading.Thread",
-                "Process", "multiprocessing.Process",
-                "ThreadPoolExecutor", "concurrent.futures.ThreadPoolExecutor",
-            ):
-                scores["race_condition"] += 0.8
-                evidence["race_condition"].append(f"concurrent task created: {name}()")
-            # Async primitives
-            if name in ("asyncio.gather", "asyncio.create_task"):
-                scores["race_condition"] += 0.7
-                evidence["race_condition"].append(f"async concurrency: {name}()")
-
-    # --- external_call ---
-    for node in ast.walk(func_tree):
-        if isinstance(node, ast.Call):
-            name = _call_name(node)
-            if any(name.startswith(p) for p in (
-                "requests.", "urllib", "http.", "httpx.",
-                "boto3.", "open(", "os.path", "pathlib",
-                "subprocess.",
-            )):
-                scores["external_call"] += 0.6
-                evidence["external_call"].append(f"external call: {name}()")
-            if name in ("open", "requests.get", "requests.post", "urlopen"):
-                scores["external_call"] += 0.3
-                evidence["external_call"].append(f"I/O call: {name}()")
-
-    # --- random non-determinism (mapped to timing as "external_call" isn't right,
-    #     and it's not truly any of the four — use lowest-confidence timing slot) ---
+    # Unseeded random calls (module-level PRNG state not reset between tests)
     for node in ast.walk(func_tree):
         if isinstance(node, ast.Call):
             name = _call_name(node)
@@ -261,17 +270,49 @@ def _analyse(
                 "random.random", "random.choice", "random.randint",
                 "random.shuffle", "secrets.token_bytes",
             ):
-                # Random calls are a distinct pattern; map to shared_state with low
-                # confidence because none of the four canonical labels fits perfectly,
-                # but "shared_state" via unseeded global RNG is the closest structural
-                # match (module-level mutable random state).
                 scores["shared_state"] += 0.55
                 evidence["shared_state"].append(
                     f"unseeded random call: {ast.unparse(node)!r} "
                     f"— module-level PRNG state not reset between tests"
                 )
 
+    # ---- race_condition ------------------------------------------
+    for node in ast.walk(func_tree):
+        if isinstance(node, ast.Call):
+            name = _call_name(node)
+            if name in (
+                "Thread", "threading.Thread",
+                "Process", "multiprocessing.Process",
+                "ThreadPoolExecutor", "concurrent.futures.ThreadPoolExecutor",
+            ):
+                scores["race_condition"] += 0.8
+                evidence["race_condition"].append(
+                    f"concurrent task created: {name}()"
+                )
+            if name in ("asyncio.gather", "asyncio.create_task"):
+                scores["race_condition"] += 0.7
+                evidence["race_condition"].append(f"async concurrency: {name}()")
+
+    # ---- external_call -------------------------------------------
+    for node in ast.walk(func_tree):
+        if isinstance(node, ast.Call):
+            name = _call_name(node)
+            if any(name.startswith(p) for p in (
+                "requests.", "urllib", "http.", "httpx.",
+                "boto3.", "os.path", "pathlib", "subprocess.",
+            )):
+                scores["external_call"] += 0.6
+                evidence["external_call"].append(f"external call: {name}()")
+            if name in ("open", "requests.get", "requests.post", "urlopen"):
+                scores["external_call"] += 0.3
+                evidence["external_call"].append(f"I/O call: {name}()")
+
     return scores, evidence
+
+
+# ---------------------------------------------------------------------------
+# AST helpers  (module-level; safe to use from any process)
+# ---------------------------------------------------------------------------
 
 
 def _extract_function(tree: ast.AST, func_name: str) -> ast.AST | None:
@@ -295,11 +336,10 @@ def _call_name(node: ast.Call) -> str:
 
 
 def _is_fixture_with_broad_scope(decorator: ast.expr) -> bool:
-    """True if decorator looks like @pytest.fixture(scope="module"/"session"/"class")."""
+    """True if decorator is @pytest.fixture(scope="module"/"session"/"class")."""
     if not isinstance(decorator, ast.Call):
         return False
-    name = _call_name(decorator)
-    if "fixture" not in name:
+    if "fixture" not in _call_name(decorator):
         return False
     for kw in decorator.keywords:
         if kw.arg == "scope" and isinstance(kw.value, ast.Constant):
@@ -320,22 +360,20 @@ def _normalise_confidence(scores: dict[str, float], winner: str) -> float:
     """
     winner_score = scores[winner]
     if winner_score == 0.0:
-        return 0.2  # nothing found — low confidence guess
+        return 0.2  # nothing found — low-confidence guess
 
     other_scores = [v for k, v in scores.items() if k != winner]
     runner_up = max(other_scores) if other_scores else 0.0
 
-    # Gap between winner and runner-up as a fraction of winner
     gap = (winner_score - runner_up) / winner_score if winner_score > 0 else 0.0
 
-    # Base confidence from raw score, tempered by separation
     base = min(winner_score, 1.0)
     if gap >= 0.5:
-        confidence = base * 1.0       # clear winner
+        confidence = base * 1.0
     elif gap >= 0.25:
-        confidence = base * 0.85      # plausible but not certain
+        confidence = base * 0.85
     else:
-        confidence = base * 0.6       # several categories compete
+        confidence = base * 0.6
 
     return round(min(max(confidence, 0.1), 0.97), 3)
 
@@ -390,7 +428,7 @@ def _build_trace(
 ) -> str:
     """Short narrative of which categories were considered and why one won."""
     lines = ["Categories considered:"]
-    for cat in CATEGORIES:
+    for cat in _CATEGORIES:
         s = scores[cat]
         hits = evidence.get(cat, [])
         hit_str = f" [{'; '.join(hits[:1])}]" if hits else " [no signals found]"

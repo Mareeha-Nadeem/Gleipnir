@@ -1,0 +1,107 @@
+[
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_b",
+    "run_id": 1,
+    "passed": true,
+    "duration": 0.000839,
+    "parallel": false
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_a",
+    "run_id": 1,
+    "passed": false,
+    "duration": 0.000359,
+    "parallel": false
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_timing_sensitive_failure",
+    "run_id": 1,
+    "passed": false,
+    "duration": 0.000466,
+    "parallel": false
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_b",
+    "run_id": 2,
+    "passed": true,
+    "duration": 0.000574,
+    "parallel": true
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_a",
+    "run_id": 2,
+    "passed": true,
+    "duration": 0.000622,
+    "parallel": true
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_timing_sensitive_failure",
+    "run_id": 2,
+    "passed": true,
+    "duration": 0.001024,
+    "parallel": true
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_timing_sensitive_failure",
+    "run_id": 3,
+    "passed": true,
+    "duration": 0.000209,
+    "parallel": false
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_b",
+    "run_id": 3,
+    "passed": true,
+    "duration": 0.000173,
+    "parallel": false
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_a",
+    "run_id": 3,
+    "passed": true,
+    "duration": 0.00016,
+    "parallel": false
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_a",
+    "run_id": 4,
+    "passed": true,
+    "duration": 0.00066,
+    "parallel": true
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_timing_sensitive_failure",
+    "run_id": 4,
+    "passed": true,
+    "duration": 0.000573,
+    "parallel": true
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_b",
+    "run_id": 4,
+    "passed": true,
+    "duration": 0.000513,
+    "parallel": true
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_b",
+    "run_id": 5,
+    "passed": true,
+    "duration": 0.000216,
+    "parallel": false
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_timing_sensitive_failure",
+    "run_id": 5,
+    "passed": true,
+    "duration": 0.000193,
+    "parallel": false
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_a",
+    "run_id": 5,
+    "passed": true,
+    "duration": 0.000165,
+    "parallel": false
+  }
+]
