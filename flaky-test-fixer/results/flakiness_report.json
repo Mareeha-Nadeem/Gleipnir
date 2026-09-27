@@ -1,0 +1,23 @@
+[
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_a",
+    "total_runs": 4,
+    "pass_rate": 0.5,
+    "avg_duration": 0.001526,
+    "classification": "flaky"
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_b",
+    "total_runs": 4,
+    "pass_rate": 0.5,
+    "avg_duration": 0.00152,
+    "classification": "flaky"
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_timing_sensitive_failure",
+    "total_runs": 4,
+    "pass_rate": 0.75,
+    "avg_duration": 0.000913,
+    "classification": "flaky"
+  }
+]
