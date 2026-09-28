@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "flaky-test-fixer": {
+      "command": "C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+      "args": ["C:\\Users\\User\\Documents\\Gleipnir\\mcp_server.py"],
+      "cwd": "C:\\Users\\User\\Documents\\Gleipnir"
+    }
+  }
+}

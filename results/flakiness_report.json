@@ -1,0 +1,156 @@
+[
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_broken_assertion_false",
+    "total_runs": 15,
+    "pass_rate": 0.0,
+    "avg_duration": 0.001919,
+    "classification": "suspected_order_dependent"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_broken_attribute_error",
+    "total_runs": 15,
+    "pass_rate": 0.0,
+    "avg_duration": 0.00142,
+    "classification": "suspected_order_dependent"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_broken_index_out_of_range",
+    "total_runs": 15,
+    "pass_rate": 0.0,
+    "avg_duration": 0.001824,
+    "classification": "suspected_order_dependent"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_broken_wrong_math",
+    "total_runs": 15,
+    "pass_rate": 0.0,
+    "avg_duration": 0.002696,
+    "classification": "suspected_order_dependent"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_flaky_env_var_present",
+    "total_runs": 15,
+    "pass_rate": 1.0,
+    "avg_duration": 0.001191,
+    "classification": "stable"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_flaky_list_shuffle_order",
+    "total_runs": 15,
+    "pass_rate": 0.9333,
+    "avg_duration": 0.000968,
+    "classification": "flaky"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_flaky_random_coin",
+    "total_runs": 15,
+    "pass_rate": 0.6667,
+    "avg_duration": 0.002522,
+    "classification": "flaky"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_flaky_random_int_range",
+    "total_runs": 15,
+    "pass_rate": 0.9333,
+    "avg_duration": 0.001627,
+    "classification": "flaky"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_flaky_random_threshold",
+    "total_runs": 15,
+    "pass_rate": 0.8667,
+    "avg_duration": 0.001246,
+    "classification": "flaky"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_flaky_sleep_timing",
+    "total_runs": 15,
+    "pass_rate": 1.0,
+    "avg_duration": 0.058299,
+    "classification": "stable"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_flaky_thread_race",
+    "total_runs": 15,
+    "pass_rate": 1.0,
+    "avg_duration": 0.006035,
+    "classification": "stable"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_stable_addition",
+    "total_runs": 15,
+    "pass_rate": 1.0,
+    "avg_duration": 0.001233,
+    "classification": "stable"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_stable_dict_access",
+    "total_runs": 15,
+    "pass_rate": 1.0,
+    "avg_duration": 0.001062,
+    "classification": "stable"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_stable_exception_raised",
+    "total_runs": 15,
+    "pass_rate": 1.0,
+    "avg_duration": 0.001097,
+    "classification": "stable"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_stable_generator",
+    "total_runs": 15,
+    "pass_rate": 1.0,
+    "avg_duration": 0.001153,
+    "classification": "stable"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_stable_list_sort",
+    "total_runs": 15,
+    "pass_rate": 1.0,
+    "avg_duration": 0.001785,
+    "classification": "stable"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_stable_set_operations",
+    "total_runs": 15,
+    "pass_rate": 1.0,
+    "avg_duration": 0.000967,
+    "classification": "stable"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_stable_string_ops",
+    "total_runs": 15,
+    "pass_rate": 1.0,
+    "avg_duration": 0.001334,
+    "classification": "stable"
+  },
+  {
+    "test_name": "tests/sample_project/test_extended.py::test_stable_type_check",
+    "total_runs": 15,
+    "pass_rate": 1.0,
+    "avg_duration": 0.001182,
+    "classification": "stable"
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_a",
+    "total_runs": 15,
+    "pass_rate": 0.8,
+    "avg_duration": 0.000873,
+    "classification": "flaky"
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_random_failure_b",
+    "total_runs": 15,
+    "pass_rate": 0.7333,
+    "avg_duration": 0.001033,
+    "classification": "flaky"
+  },
+  {
+    "test_name": "tests/sample_project/test_sample.py::test_timing_sensitive_failure",
+    "total_runs": 15,
+    "pass_rate": 0.8,
+    "avg_duration": 0.001113,
+    "classification": "flaky"
+  }
+]

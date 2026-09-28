@@ -39,3 +39,18 @@ htmlcov/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Pipeline result files (keep .gitkeep so the dir is tracked)
+results/run_results.json
+results/flakiness_report.json
+results/diagnosis_report.json
+results/dashboard.html
+results/seq_check.json
+results/test_report.json
+
+# Streamlit
+.streamlit/
+
+# Temporary / local
+*.log
+tmp/
